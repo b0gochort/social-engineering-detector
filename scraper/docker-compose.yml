@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080" # Map port 8080 from container to host
+    depends_on:
+      - db
+    volumes:
+      - ./session.json:/root/session.json # Persist Telegram session
+      - ./configs:/root/configs # Mount configs for easy editing
+      - ./migrations:/root/migrations # Mount migrations for easy editing
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: telegram
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Expose PostgreSQL port to host (optional, for direct access)
+
+volumes:
+  db-data:
