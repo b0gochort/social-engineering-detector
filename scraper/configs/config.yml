@@ -1,7 +1,7 @@
 telegram:
-  api_id: 24741190 # Вставьте ваш api_id, полученный с my.telegram.org
-  api_hash: "647b5a926991e198e89a52b0cc4f3eaf" # Вставьте ваш api_hash
-  phone: "+1 559 768 4365" # Вставьте ваш номер телефона в международном формате (например, +1234567890)
+  api_id:  # Вставьте ваш api_id, полученный с my.telegram.org
+  api_hash: "" # Вставьте ваш api_hash
+  phone: "" # Вставьте ваш номер телефона в международном формате (например, +1234567890)
 
 database:
-  url: "postgres://postgres:postgres@localhost:5432/telegram?sslmode=disable" # Replace with your PostgreSQL connection string
+  url: "postgres://postgres:postgres@localhost:5432/telegram?sslmode=disable" 
