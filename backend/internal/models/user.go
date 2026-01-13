@@ -12,6 +12,8 @@ type User struct {
 	PasswordHash string    `db:"password_hash"`
 	Role         string    `db:"role"`
 	DKEncrypted  string    `db:"dk_encrypted"`
+	ParentID     *int64    `db:"parent_id"`     // For child users, references parent user ID
+	TelegramID   *int64    `db:"telegram_id"`   // Telegram user ID for bot notifications
 	CreatedAt    time.Time `db:"created_at"`
 }
 

@@ -1,0 +1,15 @@
+server:
+  port: "8002"
+
+gemini:
+  api_key: "YOUR_API_KEY_HERE"  # Replace with your Gemini API key
+  model_name: "gemini-2.0-flash-exp"  # or "gemini-1.5-flash"
+  max_retries: 3
+
+database:
+  type: "sqlite"  # or "postgres"
+  path: "./data/annotations.db"  # SQLite path
+
+rate_limit:
+  requests_per_day: 1500  # Gemini free tier limit
+  burst_size: 10

@@ -1,0 +1,16 @@
+database:
+  url: "host=db port=5432 user=postgres password=postgres dbname=se_detector sslmode=disable"
+collector:
+  url: "http://collector:8081"
+  poll_interval_seconds: 10
+  chat_process_delay_seconds: 5
+ml_service:
+  url: "http://ml-service:8001"
+annotation_service:
+  url: "http://annotation-service:8002"
+  enabled: false  # Set to true для сбора датасета, false для production с ML
+access_control:
+  enabled: true  # Set to true для включения механизма запроса доступа к сообщениям
+  telegram_bot_token: "8535388034:AAHZQcVOjb1f6svUXHkpTwFw8gIGm_hKSjs"  # Токен Telegram-бота для уведомлений ребенку
+server:
+  port: 8080

@@ -1,0 +1,96 @@
+erDiagram
+    users ||--o{ users : "parent_id"
+    users ||--o{ access_requests : "parent_id"
+    users ||--o{ access_requests : "child_id"
+    users ||--o{ ml_dataset : "validated_by"
+    users ||--o{ audit_log : "user_id"
+
+    chats ||--o{ messages : "chat_id"
+
+    messages ||--o{ incidents : "message_id"
+    messages ||--o{ ml_dataset : "original_message_id"
+
+    incidents ||--o{ access_requests : "incident_id"
+    access_requests ||--o| incidents : "current_access_request_id"
+
+    users {
+        serial id PK
+        text username UK "NOT NULL"
+        text password_hash "NOT NULL"
+        text role "NOT NULL (admin/parent/child)"
+        text dk_encrypted "NOT NULL (AES key)"
+        int parent_id FK "NULL for parents"
+        bigint telegram_id "Telegram account ID"
+        timestamp created_at
+    }
+
+    chats {
+        serial id PK
+        bigint telegram_id UK "NOT NULL"
+        text name "NOT NULL"
+        boolean is_group "NOT NULL"
+        boolean monitoring_active "NOT NULL"
+        bigint last_collected_message_id "Migration 2"
+    }
+
+    messages {
+        serial id PK
+        int chat_id FK "NOT NULL"
+        bigint telegram_message_id "NOT NULL"
+        text sender_username "NOT NULL"
+        timestamp timestamp "NOT NULL"
+        text content_encrypted "NOT NULL (ENCRYPTED)"
+    }
+
+    incidents {
+        serial id PK
+        int message_id FK "NOT NULL"
+        text threat_type "NOT NULL"
+        real model_confidence "NOT NULL (0.0-1.0)"
+        int v2_category_id "Migration 7 (1-9)"
+        int v4_category_id "Migration 7 (1-9)"
+        boolean models_agree "Migration 7"
+        text status "NOT NULL (new/reviewed/resolved/false_positive)"
+        boolean access_granted "NOT NULL (Migration 6)"
+        int current_access_request_id FK "Migration 6"
+        text summary_encrypted "NOT NULL (ENCRYPTED)"
+        timestamp created_at
+    }
+
+    access_requests {
+        serial id PK
+        int incident_id FK "NOT NULL"
+        int parent_id FK "NOT NULL"
+        int child_id FK "NOT NULL"
+        varchar status "NOT NULL (pending/approved/rejected)"
+        timestamp requested_at "NOT NULL"
+        timestamp responded_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    ml_dataset {
+        serial id PK
+        text message_text "NOT NULL (PLAIN TEXT)"
+        int category_id "NOT NULL (1-9)"
+        text category_name "NOT NULL"
+        text justification "LLM explanation"
+        text provider "NOT NULL (groq/gemini)"
+        text model_version "NOT NULL"
+        timestamp annotated_at
+        int original_message_id FK "Optional"
+        boolean is_validated "DEFAULT FALSE"
+        int validated_by FK
+        timestamp validated_at
+        text source "telegram/manual/synthetic/real"
+        timestamp created_at
+    }
+
+    audit_log {
+        serial id PK
+        int user_id FK
+        text action_type "NOT NULL"
+        text details "NOT NULL (JSON)"
+        timestamp timestamp
+        text ip_address
+    }

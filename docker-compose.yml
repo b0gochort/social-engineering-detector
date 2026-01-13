@@ -1,0 +1,169 @@
+version: '3.8'
+
+# Архитектура системы:
+# 1. Collector (Telegram) -> собирает сообщения из Telegram
+# 2. Collector -> Backend -> отправляет сообщения на бэкенд
+# 3. Backend -> ML Service -> классифицирует в реальном времени
+# 4. Backend -> PostgreSQL -> сохраняет инциденты
+# 5. Annotation Service - отдельный сервис для создания датасета (с Gemini API)
+#    - Используется для разметки большого количества сообщений
+#    - Экспортирует CSV для обучения ML модели
+#    - Не связан с основным flow, работает отдельно
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:13
+    container_name: se-detector-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: se_detector
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - se-detector-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Go)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: se-detector-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=se_detector
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - MASTER_KEY=${MASTER_KEY}
+      - SERVER_PORT=8080
+    volumes:
+      # Mount collector config for reading/writing
+      - ./collector/configs:/app/collector-config
+      # Mount Docker socket for restarting collector
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount docker-compose.yml directory for docker-compose commands
+      - .:/app/project
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - se-detector-network
+    restart: unless-stopped
+
+  # ML Service (Python/FastAPI)
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: se-detector-ml-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - API_HOST=0.0.0.0
+      - API_PORT=8001
+      - DEVICE=cpu  # Change to 'cuda' if GPU available
+    volumes:
+      # Mount models directory for fine-tuned models
+      - ./ml-service/models:/app/models
+    networks:
+      - se-detector-network
+    restart: unless-stopped
+
+  # Annotation Service (Go + Gemini API)
+  annotation-service:
+    build:
+      context: ./annotation-service
+      dockerfile: Dockerfile
+    container_name: se-detector-annotation-service
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVER_PORT=8002
+      # Multiple LLM API Keys for load balancing and failover
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_API_KEY_2=${GEMINI_API_KEY_2}
+      - GEMINI_API_KEY_3=${GEMINI_API_KEY_3}
+      # Legacy settings
+      - GEMINI_MODEL_NAME=gemini-2.0-flash-exp
+      - GEMINI_MAX_RETRIES=3
+      - DB_PATH=./data/annotations.db
+      - LOG_LEVEL=INFO
+    volumes:
+      # Persist annotation database
+      - ./annotation-service/data:/root/data
+      # Mount config
+      - ./annotation-service/configs:/root/configs
+    networks:
+      - se-detector-network
+    restart: unless-stopped
+
+  # Telegram Collector - собирает сообщения из Telegram и отправляет на Backend
+  collector:
+    build:
+      context: ./collector
+      dockerfile: Dockerfile
+    container_name: se-detector-collector
+    ports:
+      - "8081:8081"
+    environment:
+      # Telegram configuration (from .env file)
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_PHONE=${TELEGRAM_PHONE}
+      # VK configuration (optional, from .env file)
+      - VK_APP_ID=${VK_APP_ID:-0}
+      - VK_ACCESS_TOKEN=${VK_ACCESS_TOKEN:-}
+      - VK_ENABLED=${VK_ENABLED:-false}
+      # Backend and database
+      - BACKEND_URL=http://backend:8080
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=se_detector
+    depends_on:
+      - backend
+      - db
+    volumes:
+      - ./collector/session:/root/session
+      - ./collector/configs:/root/configs
+    networks:
+      - se-detector-network
+    restart: unless-stopped
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: se-detector-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - se-detector-network
+    restart: unless-stopped
+
+volumes:
+  db_data:
+
+networks:
+  se-detector-network:

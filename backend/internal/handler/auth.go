@@ -7,7 +7,7 @@ import (
 	"backend/internal/service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 type AuthHandler interface {
@@ -22,7 +22,7 @@ func (h *authHandler) Logout(c *gin.Context) {
 
 	err := h.authService.Logout(username)
 	if err != nil {
-		h.log.Errorf("Failed to logout user %s: %v", username, err)
+		h.logger.Error("Failed to logout user", zap.String("username", username), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
 		return
 	}
@@ -32,11 +32,11 @@ func (h *authHandler) Logout(c *gin.Context) {
 
 type authHandler struct {
 	authService service.AuthService
-	log         *logrus.Logger
+	logger      *zap.Logger
 }
 
-func NewAuthHandler(authService service.AuthService, log *logrus.Logger) AuthHandler {
-	return &authHandler{authService: authService, log: log}
+func NewAuthHandler(authService service.AuthService, logger *zap.Logger) AuthHandler {
+	return &authHandler{authService: authService, logger: logger}
 }
 
 type RegisterRequest struct {
@@ -52,7 +52,7 @@ type LoginRequest struct {
 func (h *authHandler) RegisterParent(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.Errorf("Failed to bind JSON for registration: %v", err)
+		h.logger.Error("Failed to bind JSON for registration", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -63,7 +63,7 @@ func (h *authHandler) RegisterParent(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
-		h.log.Errorf("Failed to register parent: %v", err)
+		h.logger.Error("Failed to register parent", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
 	}
@@ -78,7 +78,7 @@ func (h *authHandler) RegisterParent(c *gin.Context) {
 func (h *authHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.Errorf("Failed to bind JSON for login: %v", err)
+		h.logger.Error("Failed to bind JSON for login", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -89,7 +89,7 @@ func (h *authHandler) Login(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
-		h.log.Errorf("Failed to login user: %v", err)
+		h.logger.Error("Failed to login user", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to login"})
 		return
 	}
@@ -100,4 +100,3 @@ func (h *authHandler) Login(c *gin.Context) {
 		"expires_at": expirationTime,
 	})
 }
-

@@ -7,17 +7,18 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/crypto"
 	"backend/internal/models"
 	"backend/internal/repository"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/argon2"
 )
 
 var ( // Define custom errors
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrUserNotFound      = errors.New("user not found")
+	ErrUserAlreadyExists  = errors.New("user already exists")
+	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
@@ -39,32 +40,37 @@ type AuthService interface {
 func (s *authService) Logout(username string) error {
 	// TODO: Invalidate JWT token (e.g., add to a blacklist in Redis)
 	// For now, we'll just log it.
-	s.log.Infof("User %s token would be invalidated.", username)
+	s.logger.Info("User token would be invalidated.", zap.String("username", username))
 
 	// TODO: Destroy Data Key (DK) from secure memory
 	// For now, we'll just log it.
-	s.log.Infof("User %s DK would be destroyed from memory.", username)
+	s.logger.Info("User DK would be destroyed from memory.", zap.String("username", username))
 
 	// TODO: Log "User Logout" event to AuditLog
-	s.log.Infof("User %s logged out successfully.", username)
+	s.logger.Info("User logged out successfully.", zap.String("username", username))
 
 	return nil
 }
 
 type authService struct {
-	repo repository.AuthRepository
-	log  *logrus.Logger
+	repo       repository.AuthRepository
+	logger     *zap.Logger
+	keyManager *crypto.KeyManager
 }
 
-func NewAuthService(repo repository.AuthRepository, log *logrus.Logger) AuthService {
-	return &authService{repo: repo, log: log}
+func NewAuthService(repo repository.AuthRepository, keyManager *crypto.KeyManager, logger *zap.Logger) AuthService {
+	return &authService{
+		repo:       repo,
+		logger:     logger,
+		keyManager: keyManager,
+	}
 }
 
 func (s *authService) RegisterParent(username, password string) (*models.User, error) {
 	// Check if a user already exists
 	count, err := s.repo.CountUsers()
 	if err != nil {
-		s.log.Errorf("Failed to count users: %v", err)
+		s.logger.Error("Failed to count users", zap.Error(err))
 		return nil, fmt.Errorf("failed to check existing users: %w", err)
 	}
 	if count > 0 {
@@ -74,21 +80,16 @@ func (s *authService) RegisterParent(username, password string) (*models.User, e
 	// Hash the Master Password (MP)
 	passwordHash, err := s.hashPassword(password)
 	if err != nil {
-		s.log.Errorf("Failed to hash password: %v", err)
+		s.logger.Error("Failed to hash password", zap.Error(err))
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Generate Data Key (DK)
-	dk, err := generateRandomBytes(32) // 32 bytes for AES-256
+	// Generate and encrypt Data Key (DK) with MASTER_KEY
+	dkEncrypted, err := s.keyManager.GenerateAndEncryptDataKey()
 	if err != nil {
-		s.log.Errorf("Failed to generate DK: %v", err)
+		s.logger.Error("Failed to generate and encrypt DK", zap.Error(err))
 		return nil, fmt.Errorf("failed to generate data key: %w", err)
 	}
-
-	// Encrypt DK with MP (KEK process - placeholder for actual implementation)
-	// For now, we'll just base64 encode the DK as a placeholder for DKenc
-	// In a real scenario, this would involve deriving a key from MP and encrypting DK
-	dkEncrypted := base64.StdEncoding.EncodeToString(dk)
 
 	user := &models.User{
 		Username:     username,
@@ -99,7 +100,7 @@ func (s *authService) RegisterParent(username, password string) (*models.User, e
 
 	err = s.repo.CreateUser(user)
 	if err != nil {
-		s.log.Errorf("Failed to create user: %v", err)
+		s.logger.Error("Failed to create user", zap.Error(err))
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
@@ -112,7 +113,7 @@ func (s *authService) Login(username, password string) (string, time.Time, error
 		if errors.Is(err, errors.New("sql: no rows in result set")) { // Specific error for no user found
 			return "", time.Time{}, ErrUserNotFound
 		}
-		s.log.Errorf("Failed to get user by username: %v", err)
+		s.logger.Error("Failed to get user by username", zap.Error(err))
 		return "", time.Time{}, fmt.Errorf("failed to retrieve user: %w", err)
 	}
 
@@ -123,7 +124,7 @@ func (s *authService) Login(username, password string) (string, time.Time, error
 
 	// TODO: Decrypt DKenc using MP to get DK and store in secure memory
 	// For now, we'll just log that DK would be decrypted.
-	s.log.Debugf("DK for user %s would be decrypted and stored in memory.", user.Username)
+	s.logger.Debug("DK for user would be decrypted and stored in memory.", zap.String("username", user.Username))
 
 	// Generate JWT token
 	expirationTime := time.Now().Add(24 * time.Hour)
@@ -139,12 +140,12 @@ func (s *authService) Login(username, password string) (string, time.Time, error
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		s.log.Errorf("Failed to generate JWT token: %v", err)
+		s.logger.Error("Failed to generate JWT token", zap.Error(err))
 		return "", time.Time{}, fmt.Errorf("failed to generate token: %w", err)
 	}
 
 	// TODO: Log "User Login" event to AuditLog
-	s.log.Infof("User %s logged in successfully.", user.Username)
+	s.logger.Info("User logged in successfully.", zap.String("username", user.Username))
 
 	return tokenString, expirationTime, nil
 }
@@ -156,7 +157,7 @@ func (s *authService) hashPassword(password string) (string, error) {
 		return "", err
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, uint8(4), 32)
 
 	// Store salt and hash together, e.g., $argon2id$v=19$m=65536,t=1,p=4$BASE64_SALT$BASE64_HASH
 	encodedSalt := base64.RawStdEncoding.EncodeToString(salt)
@@ -167,30 +168,53 @@ func (s *authService) hashPassword(password string) (string, error) {
 
 // verifyPassword compares a plaintext password with a hashed password.
 func (s *authService) verifyPassword(hashedPassword, password string) bool {
-	// Extract salt and parameters from the hashed password string
+	// Parse the encoded hash format: $argon2id$v=19$m=65536,t=1,p=4$salt$hash
+	parts := []byte(hashedPassword)
+
+	// Split by '$'
+	sections := make([]string, 0)
+	start := 0
+	for i, b := range parts {
+		if b == '$' {
+			if i > start {
+				sections = append(sections, string(parts[start:i]))
+			}
+			start = i + 1
+		}
+	}
+	if start < len(parts) {
+		sections = append(sections, string(parts[start:]))
+	}
+
+	// Expected format: ["argon2id", "v=19", "m=65536,t=1,p=4", "salt", "hash"]
+	if len(sections) != 5 {
+		s.logger.Error("Invalid hash format", zap.Int("sections", len(sections)))
+		return false
+	}
+
+	// Parse parameters
 	var version int
+	fmt.Sscanf(sections[1], "v=%d", &version)
+
 	var m, t, p uint32
-	var salt, hash []byte
+	fmt.Sscanf(sections[2], "m=%d,t=%d,p=%d", &m, &t, &p)
 
-	_, err := fmt.Sscanf(hashedPassword, "$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", &version, &m, &t, &p, &salt, &hash)
+	saltStr := sections[3]
+	hashStr := sections[4]
+
+	decodedSalt, err := base64.RawStdEncoding.DecodeString(saltStr)
 	if err != nil {
-		s.log.Errorf("Failed to parse hashed password: %v", err)
+		s.logger.Error("Failed to decode salt", zap.Error(err))
 		return false
 	}
-
-	decodedSalt, err := base64.RawStdEncoding.DecodeString(string(salt))
+	decodedHash, err := base64.RawStdEncoding.DecodeString(hashStr)
 	if err != nil {
-		s.log.Errorf("Failed to decode salt: %v", err)
-		return false
-	}
-	decodedHash, err := base64.RawStdEncoding.DecodeString(string(hash))
-	if err != nil {
-		s.log.Errorf("Failed to decode hash: %v", err)
+		s.logger.Error("Failed to decode hash", zap.Error(err))
 		return false
 	}
 
 	// Re-hash the provided password with the extracted parameters and salt
-	comparisonHash := argon2.IDKey([]byte(password), decodedSalt, t, m, p, uint32(len(decodedHash)))
+	comparisonHash := argon2.IDKey([]byte(password), decodedSalt, t, m, uint8(p), uint32(len(decodedHash)))
 
 	// Compare the generated hash with the stored hash
 	return fmt.Sprintf("%x", comparisonHash) == fmt.Sprintf("%x", decodedHash)

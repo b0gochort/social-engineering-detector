@@ -5,57 +5,77 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9db121d5-0828-4638-ba00-65cfea42e00c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/scraper/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/Dockerfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/cmd/scraper/main.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/configs/config.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/docker-compose.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/go.mod" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/go.sum" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/main.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/migrations/1_create_messages_table.down.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/migrations/1_create_messages_table.up.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/pkg/api/api.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/pkg/config/config.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/pkg/scraper/scraper.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/pkg/storage/storage.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/pkg/telegram/client.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scraper/session.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/handler/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/handler/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/middleware/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/middleware/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/repository/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/repository/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/repository/database.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/repository/database.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/server/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/service/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/service/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/collector/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/configs/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/collector/configs/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/collector/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/collector/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/collector/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/migrations/1_create_messages_table.down.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/migrations/1_create_messages_table.up.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/pkg/api/api.go" beforeDir="false" afterPath="$PROJECT_DIR$/collector/pkg/api/api.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/pkg/collector/collector.go" beforeDir="false" afterPath="$PROJECT_DIR$/collector/pkg/collector/collector.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/pkg/config/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/collector/pkg/config/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/pkg/telegram/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/collector/pkg/telegram/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector/session.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="GOROOT" url="file://$USER_HOME$/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.25.1.windows-386" />
+  <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../../Program Files/Go" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="33yp56Yar9seslvno0X1D3aEEth" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Go Build.go build collector.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "git-widget-placeholder": "main",
-    "go.import.settings.migrated": "true",
-    "go.sdk.automatically.set": "true",
-    "last_opened_file_path": "C:/Users/bogochort/Documents/diplom/social-engineering-detector",
-    "nodejs_package_manager_path": "npm"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Go Build.go build backend.executor&quot;: &quot;Debug&quot;,
+    &quot;Go Build.go build collector.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.GoLinterPluginOnboarding&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/bogochort/Documents/diplom/social-engineering-detector&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.Mappings&quot;
   }
-}]]></component>
-  <component name="RunManager">
+}</component>
+  <component name="RunManager" selected="Go Build.go build backend">
+    <configuration name="go build backend" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="social-engineering-detector" />
+      <working_directory value="$PROJECT_DIR$/backend" />
+      <kind value="PACKAGE" />
+      <package value="backend" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/backend/main.go" />
+      <method v="2" />
+    </configuration>
     <configuration name="go build collector" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="social-engineering-detector" />
       <working_directory value="$PROJECT_DIR$/collector" />
@@ -67,6 +87,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Build.go build backend" />
         <item itemvalue="Go Build.go build collector" />
       </list>
     </recent_temporary>
@@ -74,16 +95,52 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-gosdk-d297c17c1fbd-d82d926f19eb-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-243.22562.186" />
-        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-GO-243.22562.186" />
+        <option value="bundled-gosdk-f466f9b0953e-146d08934cbf-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-252.26830.102" />
+        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-GO-252.26830.102" />
       </set>
     </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9db121d5-0828-4638-ba00-65cfea42e00c" name="Changes" comment="" />
+      <created>1760432696255</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1760432696255</updated>
+    </task>
+    <servers />
+  </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/collector/main.go</url>
+          <line>29</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/collector/pkg/telegram/client.go</url>
+          <line>201</line>
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/backend/internal/message_processor/processor.go</url>
+          <line>86</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="GoApplicationRunConfiguration">
+        <watch expression="*(*&quot;[]*backend/internal/models.Chat&quot;)(824636896880)" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>
