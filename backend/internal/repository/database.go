@@ -8,11 +8,11 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Required for file source
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 // NewPostgresDB establishes a new connection to the PostgreSQL database.
-func NewPostgresDB(dataSourceName string, log *logrus.Logger) (*sqlx.DB, error) {
+func NewPostgresDB(dataSourceName string, logger *zap.Logger) (*sqlx.DB, error) {
 	db, err := sqlx.Connect("postgres", dataSourceName)
 	if err != nil {
 		return nil, err
@@ -23,25 +23,25 @@ func NewPostgresDB(dataSourceName string, log *logrus.Logger) (*sqlx.DB, error) 
 		return nil, err
 	}
 
-	log.Info("Successfully connected to the database!")
+	logger.Info("Successfully connected to the database!")
 	return db, nil
 }
 
 // MigrateDB runs database migrations.
-func MigrateDB(db *sqlx.DB, log *logrus.Logger) {
+func MigrateDB(db *sqlx.DB, logger *zap.Logger) {
 	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
 	if err != nil {
-		log.Fatalf("Couldn't get database instance for running migrations: %v", err)
+		logger.Fatal("Couldn't get database instance for running migrations", zap.Error(err))
 	}
 
 	m, err := migrate.NewWithDatabaseInstance("file://migrations", "social_engineering_detector", driver)
 	if err != nil {
-		log.Fatalf("Couldn't create migrate instance: %v", err)
+		logger.Fatal("Couldn't create migrate instance", zap.Error(err))
 	}
 
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatalf("Couldn't run database migration: %v", err)
+		logger.Fatal("Couldn't run database migration", zap.Error(err))
 	}
 
-	log.Info("Database migration was run successfully")
+	logger.Info("Database migration was run successfully")
 }

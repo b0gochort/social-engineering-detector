@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -9,11 +10,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 // AuthMiddleware creates a Gin middleware for JWT authentication.
-func AuthMiddleware(log *logrus.Logger) gin.HandlerFunc {
+func AuthMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -46,7 +47,7 @@ func AuthMiddleware(log *logrus.Logger) gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			log.Errorf("Invalid JWT token: %v", err)
+			logger.Error("Invalid JWT token", zap.Error(err))
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
@@ -59,7 +60,7 @@ func AuthMiddleware(log *logrus.Logger) gin.HandlerFunc {
 		}
 
 		// TODO: Check if DK is loaded in memory (placeholder)
-		log.Debugf("User %s authenticated. DK check placeholder.", claims.Username)
+		logger.Debug("User authenticated. DK check placeholder.", zap.String("username", claims.Username))
 
 		// Set user claims in context
 		c.Set("username", claims.Username)

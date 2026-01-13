@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  ml-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: se-detector-ml-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - API_HOST=0.0.0.0
+      - API_PORT=8001
+      - DEVICE=cpu  # Change to 'cuda' if GPU available
+    volumes:
+      # Mount models directory for fine-tuned models
+      - ./models:/app/models
+      # Mount app for development (comment out in production)
+      - ./app:/app/app
+    restart: unless-stopped
+    networks:
+      - se-detector-network
+
+networks:
+  se-detector-network:

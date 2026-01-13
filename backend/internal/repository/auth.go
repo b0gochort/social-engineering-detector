@@ -4,7 +4,7 @@ import (
 	"backend/internal/models"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 type AuthRepository interface {
@@ -15,11 +15,11 @@ type AuthRepository interface {
 
 type authRepository struct {
 	db  *sqlx.DB
-	log *logrus.Logger
+	logger *zap.Logger
 }
 
-func NewAuthRepository(db *sqlx.DB, log *logrus.Logger) AuthRepository {
-	return &authRepository{db: db, log: log}
+func NewAuthRepository(db *sqlx.DB, logger *zap.Logger) AuthRepository {
+	return &authRepository{db: db, logger: logger}
 }
 
 func (r *authRepository) CreateUser(user *models.User) error {

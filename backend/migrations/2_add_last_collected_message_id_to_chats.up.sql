@@ -1,0 +1,1 @@
+ALTER TABLE chats ADD COLUMN last_collected_message_id BIGINT DEFAULT 0;

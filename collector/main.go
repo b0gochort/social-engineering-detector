@@ -5,42 +5,33 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
+
+	"time"
 
 	"collector/pkg/api"
 	"collector/pkg/collector"
 	"collector/pkg/config"
-	"collector/pkg/storage"
 	"collector/pkg/telegram"
+	"collector/pkg/vk"
 )
 
 func main() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err) // Should not happen in development
+	}
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
+
 	// Load configuration
 	cfgPath := "configs/config.yml"
 	cfg, err := config.LoadConfig(cfgPath)
 	if err != nil {
-		logrus.Fatalf("Failed to load config: %v", err)
+		logger.Fatal("Failed to load config", zap.Error(err))
 	}
-
-	// Apply database migrations
-	logrus.Info("Applying database migrations...")
-	if err := storage.ApplyMigrations(cfg.Database.URL, "./migrations"); err != nil {
-		logrus.Fatalf("Failed to apply migrations: %v", err)
-	}
-	logrus.Info("Database migrations applied successfully.")
-
-	// Initialize Storage
-	dbStorage, err := storage.NewStorage(cfg.Database.URL)
-	if err != nil {
-		logrus.Fatalf("Failed to create storage: %v", err)
-	}
-	defer func() {
-		if err := dbStorage.Close(); err != nil {
-			logrus.Printf("Error closing database: %v", err)
-		}
-	}()
 
 	// Context for Telegram client and API server
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -49,44 +40,52 @@ func main() {
 	// Initialize Telegram client
 	tgClient, err := telegram.NewClient(&cfg.Telegram)
 	if err != nil {
-		logrus.Fatalf("Failed to create Telegram client: %v", err)
+		logger.Fatal("Failed to create Telegram client", zap.Error(err))
 	}
 
-	// Initialize API server
-	apiServer := api.NewAPIServer(tgClient)
+	// Initialize VK client and collector (optional)
+	var vkCollector *collector.VKCollector
+	if cfg.VK.Enabled && cfg.VK.AccessToken != "" {
+		vkClient, err := vk.NewClient(&cfg.VK, logger)
+		if err != nil {
+			logger.Warn("Failed to create VK client, VK collection will be disabled", zap.Error(err))
+		} else {
+			vkCollector = collector.NewVKCollector(vkClient, logger, 5*time.Minute)
+			logger.Info("VK collector initialized successfully")
+		}
+	} else {
+		logger.Info("VK collector is disabled in config")
+	}
+
+	// Initialize API server with both Telegram and VK clients
+	apiServer := api.NewAPIServer(tgClient, vkCollector, cfg.VK.AppID, cfg.VK.RedirectURI, logger)
 
 	// Run API server in a goroutine
 	go func() {
-		if err := apiServer.Start(":8080"); err != nil {
-			logrus.Fatalf("API server failed to start: %v", err)
+		if err := apiServer.Start(cfg.API.Port); err != nil {
+			logger.Fatal("API server failed to start", zap.Error(err))
 		}
 	}()
 
 	// Run Telegram client and authenticate
-	logrus.Info("Starting Telegram client...")
+	logger.Info("Starting Telegram client...")
 	go func() {
 		if err := tgClient.Run(ctx, cfg.Telegram.Phone); err != nil {
-			logrus.Fatalf("Telegram client failed to run: %v", err)
+			logger.Fatal("Telegram client failed to run", zap.Error(err))
 		}
 	}()
 
 	// Wait for authentication to complete
 	select {
 	case <-tgClient.AuthCompleted:
-		logrus.Info("Telegram authentication completed.")
+		logger.Info("Telegram authentication completed.")
 	case <-ctx.Done():
-		logrus.Info("Application interrupted during Telegram client startup.")
+		logger.Info("Application interrupted during Telegram client startup.")
 		return
 	}
 
-	// Initialize and run message collector
-	collectionInterval, err := time.ParseDuration(cfg.CollectorInterval)
-	if err != nil {
-		logrus.Fatalf("Failed to parse collector interval: %v", err)
-	}
-	msgCollector := collector.NewCollection(tgClient, dbStorage, collectionInterval)
-	go msgCollector.Run(ctx)
+	// The collector will now be triggered via API calls, not run continuously.
 
 	<-ctx.Done()
-	logrus.Info("Application stopped.")
+	logger.Info("Application stopped.")
 }

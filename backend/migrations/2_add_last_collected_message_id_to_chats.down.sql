@@ -1,0 +1,1 @@
+ALTER TABLE chats DROP COLUMN last_collected_message_id;

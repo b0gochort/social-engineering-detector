@@ -32,11 +32,8 @@ COPY --from=builder /collector .
 # Copy the configs directory
 COPY --from=builder /app/configs ./configs
 
-# Copy the migrations directory
-COPY --from=builder /app/migrations ./migrations
-
 # Expose the port the app runs on
-EXPOSE 8080
+EXPOSE 8081
 
 # Command to run the executable
 CMD ["./collector"]

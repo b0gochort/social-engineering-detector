@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  annotation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: se-detector-annotation-service
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVER_PORT=8002
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL_NAME=gemini-2.0-flash-exp
+      - GEMINI_MAX_RETRIES=3
+      - DB_PATH=./data/annotations.db
+      - LOG_LEVEL=INFO
+    volumes:
+      # Persist annotation database
+      - ./data:/root/data
+      # Mount config (can override with .env)
+      - ./configs:/root/configs
+    restart: unless-stopped
+    networks:
+      - se-detector-network
+
+networks:
+  se-detector-network:
+    external: true

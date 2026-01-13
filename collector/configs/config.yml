@@ -1,9 +1,11 @@
 telegram:
-  api_id:  # Вставьте ваш api_id, полученный с my.telegram.org
-  api_hash: "" # Вставьте ваш api_hash
-  phone: "" # Вставьте ваш номер телефона в международном формате (например, +1234567890)
-
-database:
-  url: "postgres://postgres:postgres@localhost:5432/telegram?sslmode=disable" 
-
-collector_interval: "5m" # e.g., "5m", "1h", "30s"
+    api_id: 35195904
+    api_hash: c16765efa37272998e93921b065d8c88
+    phone: +1 980 516 8553
+vk:
+    app_id: 0
+    access_token: ""
+    enabled: false
+api:
+    port: "8081"
+collector_interval: 10s

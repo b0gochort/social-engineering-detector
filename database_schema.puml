@@ -1,0 +1,225 @@
+@startuml Social Engineering Detector - Database Schema
+
+!define TABLE(x) class x << (T,#FFAAAA) >>
+!define PK(x) <u>x</u>
+!define FK(x) #x
+
+hide methods
+hide stereotypes
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ============================================================================
+' USERS TABLE
+' ============================================================================
+TABLE(users) {
+  PK(id) : SERIAL
+  --
+  username : TEXT UNIQUE NOT NULL
+  password_hash : TEXT NOT NULL
+  role : TEXT NOT NULL
+  dk_encrypted : TEXT NOT NULL
+  FK(parent_id) : INTEGER
+  telegram_id : BIGINT
+  created_at : TIMESTAMP
+  --
+  Indexes:
+  • idx_users_telegram_id
+  • idx_users_parent_id
+}
+
+' ============================================================================
+' CHATS TABLE
+' ============================================================================
+TABLE(chats) {
+  PK(id) : SERIAL
+  --
+  telegram_id : BIGINT UNIQUE NOT NULL
+  name : TEXT NOT NULL
+  is_group : BOOLEAN NOT NULL
+  monitoring_active : BOOLEAN NOT NULL
+  last_collected_message_id : BIGINT
+}
+
+' ============================================================================
+' MESSAGES TABLE
+' ============================================================================
+TABLE(messages) {
+  PK(id) : SERIAL
+  --
+  FK(chat_id) : INTEGER NOT NULL
+  telegram_message_id : BIGINT NOT NULL
+  sender_username : TEXT NOT NULL
+  timestamp : TIMESTAMP NOT NULL
+  content_encrypted : TEXT NOT NULL
+  --
+  Note: Content is ENCRYPTED
+}
+
+' ============================================================================
+' INCIDENTS TABLE
+' ============================================================================
+TABLE(incidents) {
+  PK(id) : SERIAL
+  --
+  FK(message_id) : INTEGER NOT NULL
+  threat_type : TEXT NOT NULL
+  model_confidence : REAL NOT NULL
+  v2_category_id : INTEGER
+  v4_category_id : INTEGER
+  models_agree : BOOLEAN
+  status : TEXT NOT NULL
+  access_granted : BOOLEAN NOT NULL
+  FK(current_access_request_id) : INTEGER
+  summary_encrypted : TEXT NOT NULL
+  created_at : TIMESTAMP
+  --
+  Indexes:
+  • idx_incidents_access_granted
+  --
+  Categories (1-9):
+  1. Груминг
+  2. Шантаж
+  3. Буллинг
+  4. Суицид
+  5. Опасные игры
+  6. Наркотики
+  7. Мошенничество
+  8. Фишинг
+  9. Нейтральное
+}
+
+' ============================================================================
+' ACCESS_REQUESTS TABLE
+' ============================================================================
+TABLE(access_requests) {
+  PK(id) : SERIAL
+  --
+  FK(incident_id) : INTEGER NOT NULL
+  FK(parent_id) : INTEGER NOT NULL
+  FK(child_id) : INTEGER NOT NULL
+  status : VARCHAR(20) NOT NULL
+  requested_at : TIMESTAMP NOT NULL
+  responded_at : TIMESTAMP
+  created_at : TIMESTAMP NOT NULL
+  updated_at : TIMESTAMP NOT NULL
+  --
+  Indexes:
+  • idx_access_requests_incident_id
+  • idx_access_requests_parent_id
+  • idx_access_requests_child_id
+  • idx_access_requests_status
+  --
+  Constraint:
+  status IN ('pending', 'approved', 'rejected')
+}
+
+' ============================================================================
+' ML_DATASET TABLE
+' ============================================================================
+TABLE(ml_dataset) {
+  PK(id) : SERIAL
+  --
+  message_text : TEXT NOT NULL
+  category_id : INTEGER NOT NULL
+  category_name : TEXT NOT NULL
+  justification : TEXT
+  provider : TEXT NOT NULL
+  model_version : TEXT NOT NULL
+  annotated_at : TIMESTAMP
+  FK(original_message_id) : INTEGER
+  is_validated : BOOLEAN
+  FK(validated_by) : INTEGER
+  validated_at : TIMESTAMP
+  source : TEXT
+  created_at : TIMESTAMP
+  --
+  Indexes:
+  • idx_ml_dataset_category_id
+  • idx_ml_dataset_provider
+  • idx_ml_dataset_is_validated
+  • idx_ml_dataset_annotated_at
+  --
+  Note: NOT ENCRYPTED
+  Used for ML model training
+}
+
+' ============================================================================
+' AUDIT_LOG TABLE
+' ============================================================================
+TABLE(audit_log) {
+  PK(id) : SERIAL
+  --
+  FK(user_id) : INTEGER
+  action_type : TEXT NOT NULL
+  details : TEXT NOT NULL
+  timestamp : TIMESTAMP
+  ip_address : TEXT
+}
+
+' ============================================================================
+' RELATIONSHIPS
+' ============================================================================
+
+' Self-referencing: Parent-Child
+users "1" --> "0..*" users : parent_id
+
+' Chats -> Messages
+chats "1" --> "0..*" messages : chat_id
+
+' Messages -> Incidents
+messages "1" --> "0..*" incidents : message_id
+
+' Incidents -> Access Requests
+incidents "1" --> "0..*" access_requests : incident_id
+incidents "0..1" --> "0..1" access_requests : current_access_request_id
+
+' Users -> Access Requests
+users "1" --> "0..*" access_requests : parent_id\n(as parent)
+users "1" --> "0..*" access_requests : child_id\n(as child)
+
+' Messages -> ML Dataset (optional)
+messages "0..1" --> "0..*" ml_dataset : original_message_id
+
+' Users -> ML Dataset (validation)
+users "0..1" --> "0..*" ml_dataset : validated_by
+
+' Users -> Audit Log
+users "0..1" --> "0..*" audit_log : user_id
+
+' ============================================================================
+' LEGEND
+' ============================================================================
+legend right
+  **Social Engineering Detector**
+  Database Schema v1.0
+
+  **Tables: 7**
+  • users (auth & parent-child)
+  • chats (Telegram chats)
+  • messages (collected messages)
+  • incidents (detected threats)
+  • access_requests (parent access)
+  • ml_dataset (training data)
+  • audit_log (user actions)
+
+  **Key Features:**
+  • Encrypted content (messages, incidents)
+  • Parent-child user relationships
+  • Access control via requests
+  • Dual ML model tracking (v2 + v4)
+  • Training dataset (plain text)
+
+  **ML Categories (1-9):**
+  1. Grooming
+  2. Blackmail
+  3. Bullying
+  4. Suicide
+  5. Dangerous games
+  6. Drugs
+  7. Fraud
+  8. Phishing
+  9. Neutral
+endlegend
+
+@enduml
