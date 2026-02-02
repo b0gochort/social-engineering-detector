@@ -72,7 +72,7 @@ cd social-engineering-detector/annotation-service
 
 ```yaml
 gemini:
-  api_key: "YOUR_GEMINI_API_KEY"  # Из llm.py: AIzaSyCUphSo3aAhaw7ndxpz8hOBsco52UQMkPs
+  api_key: "YOUR_GEMINI_API_KEY"  
 ```
 
 ### 2. Установка зависимостей
